@@ -90,7 +90,7 @@ export default function BettingForm() {
 
             // Check if compressed file is still too large
             if (compressionResult.file.size > 2.5 * 1024 * 1024) {
-                setCompressionError('Image is too large. Please upload a smaller image (max 2MB after compression)');
+                setCompressionError('Image is too large. Please upload a smaller image in size');
                 setIsCompressing(false);
                 return;
             }
@@ -407,7 +407,7 @@ export default function BettingForm() {
                             Payment Confirmation
                         </h3>
                         <p className="text-gray-600">
-                            Upload a screenshot of your payment confirmation (max 2MB)
+                            Upload a screenshot of your payment confirmation
                         </p>
 
                         <div className="space-y-4">

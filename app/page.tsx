@@ -16,15 +16,13 @@ export default function HomePage() {
               height={120}
               className="object-contain"
             />
-            <div className="hidden sm:block">
-              <Image
-                src="/images/abc-logo-small.png"
-                alt="ABC Logo Small"
-                width={80}
-                height={80}
-                className="object-contain"
-              />
-            </div>
+            <Image
+              src="/images/abc-logo-small.png"
+              alt="ABC Logo Small"
+              width={80}
+              height={80}
+              className="object-contain"
+            />
           </div>
 
           <h1 className="text-4xl font-semibold text-indigo-600 mb-2">

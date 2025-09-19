@@ -89,7 +89,7 @@ export default function BettingForm() {
             });
 
             // Check if compressed file is still too large
-            if (compressionResult.file.size > 2 * 1024 * 1024) {
+            if (compressionResult.file.size > 2.5 * 1024 * 1024) {
                 setCompressionError('Image is too large. Please upload a smaller image (max 2MB after compression)');
                 setIsCompressing(false);
                 return;
@@ -423,7 +423,7 @@ export default function BettingForm() {
                             {isCompressing && (
                                 <div className="flex items-center gap-3 text-blue-600 bg-blue-50 p-4 rounded-lg">
                                     <Spinner size="sm" />
-                                    <span className="text-sm font-medium">Compressing image...</span>
+                                    <span className="text-sm font-medium">Processing image...</span>
                                 </div>
                             )}
 
@@ -444,7 +444,7 @@ export default function BettingForm() {
                                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                             </svg>
-                                            Image ready for upload
+                                            Image ready
                                         </span>
                                         <Button
                                             size="sm"

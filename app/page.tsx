@@ -43,7 +43,7 @@ export default function HomePage() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-gray-500">
-          <p>&copy; 2025 Ashoka Business Club. All rights reserved.</p>
+          <p>&copy; 2025 Shivansh Verma. UG2023.</p>
         </div>
       </div>
     </div>

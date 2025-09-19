@@ -6,7 +6,6 @@ import {
     Input,
     Card,
     CardBody,
-    Checkbox,
     Divider,
     Spinner,
     Alert
@@ -127,15 +126,26 @@ export default function BettingForm() {
         if (fileInput) fileInput.value = '';
     };
 
-    const handleTeamToggle = (team: string) => {
-        setFormData(prev => ({
-            ...prev,
-            selectedTeams: prev.selectedTeams.includes(team)
-                ? prev.selectedTeams.filter(t => t !== team)
-                : prev.selectedTeams.length < 7
-                    ? [...prev.selectedTeams, team]
-                    : prev.selectedTeams
-        }));
+    const handleTeamToggle = (team: string, sportId: string) => {
+        setFormData(prev => {
+            const currentSportTeams = SPORTS_DATA.find(s => s.id === sportId)?.teams || [];
+            const isCurrentTeamSelected = prev.selectedTeams.includes(team);
+
+            if (isCurrentTeamSelected) {
+                // Remove the team if it's already selected
+                return {
+                    ...prev,
+                    selectedTeams: prev.selectedTeams.filter(t => t !== team)
+                };
+            } else {
+                // Remove any other team from this sport and add the new one
+                const teamsFromOtherSports = prev.selectedTeams.filter(t => !currentSportTeams.includes(t));
+                return {
+                    ...prev,
+                    selectedTeams: [...teamsFromOtherSports, team]
+                };
+            }
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -143,6 +153,12 @@ export default function BettingForm() {
 
         if (!formData.name || !formData.email || formData.selectedSports.length === 0 || formData.selectedTeams.length === 0) {
             setSubmitMessage('Please fill in all fields, select at least one sport and one team.');
+            return;
+        }
+
+        // Check if user has selected 1 team for each sport
+        if (formData.selectedTeams.length !== formData.selectedSports.length) {
+            setSubmitMessage('Please select exactly 1 team for each sport you chose.');
             return;
         }
 
@@ -157,8 +173,7 @@ export default function BettingForm() {
         try {
             // First upload the image
             const uploadResult = await uploadImage(formData.paymentConfirmationImage, {
-                bucket: 'betting-images',
-                folder: 'payment-confirmations',
+                bucket: 'payment-confirmations',
                 generateUniqueFileName: true,
                 compression: {
                     maxSizeMB: 1,
@@ -214,59 +229,98 @@ export default function BettingForm() {
     };
 
     return (
-        <Card className="w-full max-w-2xl mx-auto">
-            <CardBody className="p-8">
-                <form onSubmit={handleSubmit} className="space-y-6">
+        <Card className="w-full max-w-4xl mx-auto shadow-xl">
+            <CardBody className="p-6 sm:p-8">
+                <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Personal Information */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800">Personal Information</h3>
-                        <Input
-                            label="Name"
-                            placeholder="Enter your name"
-                            value={formData.name}
-                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                            required
-                            variant="bordered"
-                        />
-                        <Input
-                            label="Email"
-                            placeholder="Enter your email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                            required
-                            variant="bordered"
-                        />
+                        <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <span className="text-2xl">👤</span>
+                            Personal Information
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label="Name"
+                                placeholder="Enter your name"
+                                value={formData.name}
+                                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                required
+                                variant="bordered"
+                            />
+                            <Input
+                                label="Email"
+                                placeholder="Enter your email"
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                required
+                                variant="bordered"
+                            />
+                        </div>
                     </div>
 
                     <Divider />
 
                     {/* Sport Selection */}
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-semibold text-gray-800">Sport Selection</h3>
-                            <span className="text-sm text-gray-500">
+                            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <span className="text-2xl">🏆</span>
+                                Sport Selection
+                            </h3>
+                            <span className="text-sm font-medium px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
                                 {formData.selectedSports.length}/7 selected
                             </span>
                         </div>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-gray-600">
                             Select the sports you want to bet on (up to 7)
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {SPORTS_DATA.map((sport) => (
-                                <Checkbox
-                                    key={sport.id}
-                                    isSelected={formData.selectedSports.includes(sport.id)}
-                                    onChange={() => handleSportToggle(sport.id)}
-                                    isDisabled={
-                                        !formData.selectedSports.includes(sport.id) &&
-                                        formData.selectedSports.length >= 7
-                                    }
-                                    className="w-full"
-                                >
-                                    <span className="text-sm font-medium">{sport.name}</span>
-                                </Checkbox>
-                            ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {SPORTS_DATA.map((sport) => {
+                                const isSelected = formData.selectedSports.includes(sport.id);
+                                const isDisabled = !isSelected && formData.selectedSports.length >= 7;
+
+                                return (
+                                    <div
+                                        key={sport.id}
+                                        onClick={() => !isDisabled && handleSportToggle(sport.id)}
+                                        className={`
+                                            relative cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105
+                                            rounded-lg p-4 border-2 min-h-[90px] flex items-center justify-center
+                                            ${isSelected
+                                                ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-md'
+                                                : isDisabled
+                                                    ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
+                                                    : 'border-gray-300 bg-white hover:border-blue-300 hover:shadow-sm'
+                                            }
+                                            ${isSelected ? 'ring-1 ring-blue-200 ring-opacity-50' : ''}
+                                        `}
+                                    >
+                                        {isSelected && (
+                                            <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                        <div className="text-center">
+                                            <div className="text-2xl mb-1">
+                                                {sport.id === 'football' && '🏈'}
+                                                {sport.id === 'basketball' && '🏀'}
+                                                {sport.id === 'cricket' && '🏏'}
+                                                {sport.id === 'tennis' && '🎾'}
+                                                {sport.id === 'baseball' && '⚾'}
+                                                {sport.id === 'hockey' && '🏒'}
+                                                {sport.id === 'soccer' && '⚽'}
+                                            </div>
+                                            <h4 className={`font-semibold text-xs ${isSelected ? 'text-blue-700' : isDisabled ? 'text-gray-400' : 'text-gray-700'
+                                                }`}>
+                                                {sport.name}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -274,52 +328,85 @@ export default function BettingForm() {
                     {formData.selectedSports.length > 0 && (
                         <>
                             <Divider />
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 <div className="flex justify-between items-center">
-                                    <h3 className="text-lg font-semibold text-gray-800">Team Selection</h3>
-                                    <span className="text-sm text-gray-500">
-                                        {formData.selectedTeams.length}/7 selected
+                                    <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                        <span className="text-2xl">🏅</span>
+                                        Team Selection
+                                    </h3>
+                                    <span className="text-sm font-medium px-3 py-1 bg-green-100 text-green-700 rounded-full">
+                                        {formData.selectedTeams.length}/{formData.selectedSports.length} selected
                                     </span>
                                 </div>
-                                <p className="text-sm text-gray-600">
-                                    Select up to 7 teams from your chosen sports
+                                <p className="text-gray-600">
+                                    Select 1 team from each sport you chose
                                 </p>
 
-                                {formData.selectedSports.map((sportId) => {
-                                    const sport = SPORTS_DATA.find(s => s.id === sportId);
-                                    if (!sport) return null;
+                                <div className="space-y-6">
+                                    {formData.selectedSports.map((sportId) => {
+                                        const sport = SPORTS_DATA.find(s => s.id === sportId);
+                                        if (!sport) return null;
 
-                                    return (
-                                        <div key={sportId} className="border rounded-lg p-4 bg-gray-50">
-                                            <h4 className="font-medium text-gray-800 mb-3">{sport.name}</h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                {sport.teams.map((team) => (
-                                                    <Checkbox
-                                                        key={team}
-                                                        isSelected={formData.selectedTeams.includes(team)}
-                                                        onChange={() => handleTeamToggle(team)}
-                                                        isDisabled={
-                                                            !formData.selectedTeams.includes(team) &&
-                                                            formData.selectedTeams.length >= 7
-                                                        }
-                                                        className="w-full"
-                                                    >
-                                                        <span className="text-sm">{team}</span>
-                                                    </Checkbox>
-                                                ))}
+                                        return (
+                                            <div key={sportId} className="border-2 border-indigo-200 rounded-xl p-6 bg-gradient-to-br from-indigo-25 to-indigo-50">
+                                                <h4 className="font-bold text-indigo-800 mb-4 text-lg flex items-center gap-3">
+                                                    <span className="text-2xl">
+                                                        {sportId === 'football' && '🏈'}
+                                                        {sportId === 'basketball' && '🏀'}
+                                                        {sportId === 'cricket' && '🏏'}
+                                                        {sportId === 'tennis' && '🎾'}
+                                                        {sportId === 'baseball' && '⚾'}
+                                                        {sportId === 'hockey' && '🏒'}
+                                                        {sportId === 'soccer' && '⚽'}
+                                                    </span>
+                                                    {sport.name}
+                                                </h4>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                    {sport.teams.map((team) => {
+                                                        const isSelected = formData.selectedTeams.includes(team);
+
+                                                        return (
+                                                            <div
+                                                                key={team}
+                                                                onClick={() => handleTeamToggle(team, sportId)}
+                                                                className={`
+                                                                    relative cursor-pointer transition-all duration-200 ease-in-out transform hover:scale-102
+                                                                    rounded-lg p-4 border text-sm font-medium text-center min-h-[60px] flex items-center justify-center
+                                                                    ${isSelected
+                                                                        ? 'border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 shadow-md'
+                                                                        : 'border-gray-300 bg-white text-gray-700 hover:border-green-300 hover:bg-green-25 hover:shadow-sm'
+                                                                    }
+                                                                    ${isSelected ? 'ring-1 ring-green-200' : ''}
+                                                                `}
+                                                            >
+                                                                {isSelected && (
+                                                                    <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                                        </svg>
+                                                                    </div>
+                                                                )}
+                                                                <span className="pr-2">{team}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </>
                     )}
 
                     {/* Payment Confirmation Image Upload */}
                     <Divider />
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800">Payment Confirmation</h3>
-                        <p className="text-sm text-gray-600">
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <span className="text-2xl">💳</span>
+                            Payment Confirmation
+                        </h3>
+                        <p className="text-gray-600">
                             Upload a screenshot of your payment confirmation (max 2MB)
                         </p>
 
@@ -329,14 +416,14 @@ export default function BettingForm() {
                                 type="file"
                                 accept="image/*"
                                 onChange={handleImageUpload}
-                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer"
                                 disabled={isCompressing}
                             />
 
                             {isCompressing && (
-                                <div className="flex items-center gap-2 text-blue-600">
+                                <div className="flex items-center gap-3 text-blue-600 bg-blue-50 p-4 rounded-lg">
                                     <Spinner size="sm" />
-                                    <span className="text-sm">Compressing image...</span>
+                                    <span className="text-sm font-medium">Compressing image...</span>
                                 </div>
                             )}
 
@@ -352,8 +439,13 @@ export default function BettingForm() {
 
                             {imagePreview && !isCompressing && (
                                 <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium text-green-600">Image ready for upload</span>
+                                    <div className="flex items-center justify-between bg-green-50 p-4 rounded-lg">
+                                        <span className="text-sm font-medium text-green-600 flex items-center gap-2">
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                            Image ready for upload
+                                        </span>
                                         <Button
                                             size="sm"
                                             color="danger"
@@ -363,7 +455,7 @@ export default function BettingForm() {
                                             Remove
                                         </Button>
                                     </div>
-                                    <div className="relative w-48 h-32 border rounded-lg overflow-hidden bg-gray-100">
+                                    <div className="relative w-64 h-40 border-2 border-green-200 rounded-lg overflow-hidden bg-gray-100 mx-auto">
                                         <Image
                                             src={imagePreview}
                                             alt="Payment confirmation preview"
@@ -383,12 +475,12 @@ export default function BettingForm() {
                             type="submit"
                             color="primary"
                             size="lg"
-                            className="w-full"
+                            className="w-full h-14 text-lg font-semibold"
                             isDisabled={
                                 !formData.name ||
                                 !formData.email ||
                                 formData.selectedSports.length === 0 ||
-                                formData.selectedTeams.length === 0 ||
+                                formData.selectedTeams.length !== formData.selectedSports.length ||
                                 !formData.paymentConfirmationImage ||
                                 isSubmitting ||
                                 isCompressing
@@ -400,7 +492,10 @@ export default function BettingForm() {
                                     Submitting...
                                 </>
                             ) : (
-                                'Submit Betting Form'
+                                <>
+                                    <span className="mr-2">🚀</span>
+                                    Submit Betting Form
+                                </>
                             )}
                         </Button>
 

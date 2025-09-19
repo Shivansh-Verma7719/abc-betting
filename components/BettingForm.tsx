@@ -14,7 +14,9 @@ import { SPORTS_DATA } from '../app/data';
 import { createClient } from '../utils/supabase/client';
 import { compressImage } from '../utils/images/compression';
 import { uploadImage } from '../utils/images/upload';
+import { deleteImage } from '../utils/images/storage';
 import Image from 'next/image';
+import { AuthError } from '@supabase/supabase-js';
 
 interface FormData {
     name: string;
@@ -37,7 +39,7 @@ export default function BettingForm() {
     const [isCompressing, setIsCompressing] = useState(false);
     const [compressionError, setCompressionError] = useState<string | null>(null);
     const [emailError, setEmailError] = useState<string | null>(null);
-    const [imageUploadUrl, setImageUploadUrl] = useState<string | null>(null);
+    const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
     const validateEmail = (email: string): boolean => {
         const ashokaEmailRegex = /^[^\s@]+@ashoka\.edu\.in$/;
@@ -207,7 +209,8 @@ export default function BettingForm() {
                 throw new Error(uploadResult.error || 'Failed to upload image');
             }
 
-            setImageUploadUrl(uploadResult.url || null);
+            // Store the uploaded image URL for potential cleanup
+            setUploadedImageUrl(uploadResult.url || null);
 
             // Then submit the form data with image URL
             const supabase = createClient();
@@ -235,24 +238,28 @@ export default function BettingForm() {
                 selectedTeams: []
             });
             setImagePreview(null);
-            setImageUploadUrl(null);
+            setUploadedImageUrl(null);
 
             // Reset file input
             const fileInput = document.getElementById('payment-image') as HTMLInputElement;
             if (fileInput) fileInput.value = '';
 
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error submitting form:', error);
 
+            // Delete the uploaded image if form submission failed
+            if (uploadedImageUrl) {
+                console.log('Deleting uploaded image due to submission error...');
+                await deleteImage(uploadedImageUrl, 'payment-confirmations');
+                setUploadedImageUrl(null);
+            }
+
             // Handle specific database errors
-            if (error instanceof Error) {
-                if (error.message.includes('duplicate key') || error.message.includes('unique constraint') || error.message.includes('already exists')) {
-                    setSubmitMessage('This email has already been used to submit a form. Each person can only submit once.');
-                } else {
-                    setSubmitMessage(`Error submitting form: ${error.message}`);
-                }
+            const errorMessage = error instanceof AuthError ? error.message : 'An unknown error occurred';
+            if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint') || errorMessage.includes('already exists')) {
+                setSubmitMessage('This email has already been used to submit a form. Each person can only submit once.');
             } else {
-                setSubmitMessage('Error submitting form. Please try again.');
+                setSubmitMessage(`Error submitting form: ${errorMessage}`);
             }
         } finally {
             setIsSubmitting(false);

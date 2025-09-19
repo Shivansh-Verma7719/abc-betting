@@ -17,8 +17,8 @@ export default function HomePage() {
               className="object-contain"
             />
             <Image
-              src="/images/abc-logo-small.png"
-              alt="ABC Logo Small"
+              src="/images/sec-logo.png"
+              alt="SEC Logo"
               width={80}
               height={80}
               className="object-contain"
@@ -26,13 +26,13 @@ export default function HomePage() {
           </div>
 
           <h1 className="text-4xl font-semibold text-indigo-600 mb-2">
-            Sports Betting Platform
+            Sports Fantasy Platform
           </h1>
           <h2 className="text-2xl md:text-2xl font-bold text-gray-800 mb-4">
             Ashoka Business Club x SEC
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Join our exciting sports betting platform! Select your favorite sports and teams to get started.
+            Join our exciting sports fantasy platform! Select your favorite sports and teams to get started.
           </p>
         </div>
 

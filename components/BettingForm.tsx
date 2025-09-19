@@ -36,7 +36,22 @@ export default function BettingForm() {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [isCompressing, setIsCompressing] = useState(false);
     const [compressionError, setCompressionError] = useState<string | null>(null);
+    const [emailError, setEmailError] = useState<string | null>(null);
     const [imageUploadUrl, setImageUploadUrl] = useState<string | null>(null);
+
+    const validateEmail = (email: string): boolean => {
+        const ashokaEmailRegex = /^[^\s@]+@ashoka\.edu\.in$/;
+        return ashokaEmailRegex.test(email);
+    };
+
+    const handleEmailChange = (email: string) => {
+        setFormData(prev => ({ ...prev, email }));
+        setEmailError(null);
+
+        if (email && !validateEmail(email)) {
+            setEmailError('Please use your Ashoka email address (@ashoka.edu.in)');
+        }
+    };
 
     const handleSportToggle = (sportId: string) => {
         setFormData(prev => {
@@ -156,6 +171,12 @@ export default function BettingForm() {
             return;
         }
 
+        // Validate Ashoka email
+        if (!validateEmail(formData.email)) {
+            setSubmitMessage('Please use your Ashoka email address (@ashoka.edu.in)');
+            return;
+        }
+
         // Check if user has selected 1 team for each sport
         if (formData.selectedTeams.length !== formData.selectedSports.length) {
             setSubmitMessage('Please select exactly 1 team for each sport you chose.');
@@ -222,7 +243,17 @@ export default function BettingForm() {
 
         } catch (error) {
             console.error('Error submitting form:', error);
-            setSubmitMessage(`Error submitting form: ${error instanceof Error ? error.message : 'Please try again.'}`);
+
+            // Handle specific database errors
+            if (error instanceof Error) {
+                if (error.message.includes('duplicate key') || error.message.includes('unique constraint') || error.message.includes('already exists')) {
+                    setSubmitMessage('This email has already been used to submit a form. Each person can only submit once.');
+                } else {
+                    setSubmitMessage(`Error submitting form: ${error.message}`);
+                }
+            } else {
+                setSubmitMessage('Error submitting form. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -248,13 +279,15 @@ export default function BettingForm() {
                                 variant="bordered"
                             />
                             <Input
-                                label="Email"
-                                placeholder="Enter your email"
+                                label="Ashoka Email"
+                                placeholder="your.name_batch@ashoka.edu.in"
                                 type="email"
                                 value={formData.email}
-                                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                onChange={(e) => handleEmailChange(e.target.value)}
                                 required
                                 variant="bordered"
+                                isInvalid={!!emailError}
+                                errorMessage={emailError}
                             />
                         </div>
                     </div>
@@ -479,6 +512,7 @@ export default function BettingForm() {
                             isDisabled={
                                 !formData.name ||
                                 !formData.email ||
+                                !validateEmail(formData.email) ||
                                 formData.selectedSports.length === 0 ||
                                 formData.selectedTeams.length !== formData.selectedSports.length ||
                                 !formData.paymentConfirmationImage ||

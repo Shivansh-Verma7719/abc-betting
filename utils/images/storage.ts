@@ -38,14 +38,14 @@ export async function deleteImage(imageUrl: string, bucket: string): Promise<boo
       .remove([filePath]);
 
     if (error) {
-      console.error("Error deleting profile image:", error);
+      console.error("Error deleting image:", error);
       return false;
     }
 
-    console.log("Successfully deleted profile image:", filePath);
+    console.log("Successfully deleted image:", filePath);
     return true;
   } catch (error) {
-    console.error("Error in deleteProfileImage:", error);
+    console.error("Error in deleteImage:", error);
     return false;
   }
 }

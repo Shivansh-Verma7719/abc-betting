@@ -193,58 +193,42 @@ export default function BettingForm() {
         setIsSubmitting(true);
         setSubmitMessage('');
 
-        try {
-            // First upload the image
-            const uploadResult = await uploadImage(formData.paymentConfirmationImage, {
-                bucket: 'payment-confirmations',
-                generateUniqueFileName: true,
-                compression: {
-                    maxSizeMB: 1,
-                    maxWidthOrHeight: 1000,
-                    quality: 0.8
+        // First upload the image
+        const uploadResult = await uploadImage(formData.paymentConfirmationImage, {
+            bucket: 'payment-confirmations',
+            generateUniqueFileName: true,
+            compression: {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1000,
+                quality: 0.8
+            }
+        });
+
+        if (!uploadResult.success) {
+            setSubmitMessage(uploadResult.error || 'Failed to upload image');
+            setIsSubmitting(false);
+            return;
+        }
+
+        // Store the uploaded image URL for potential cleanup
+        const uploadedImageUrl = uploadResult.url;
+        setUploadedImageUrl(uploadedImageUrl || null);
+
+        // Then submit the form data with image URL
+        const supabase = createClient();
+        const { error } = await supabase
+            .from('betting_submissions')
+            .insert([
+                {
+                    name: formData.name,
+                    email: formData.email,
+                    sports: formData.selectedSports,
+                    teams: formData.selectedTeams,
+                    payment_confirmation_url: uploadedImageUrl
                 }
-            });
+            ]);
 
-            if (!uploadResult.success) {
-                throw new Error(uploadResult.error || 'Failed to upload image');
-            }
-
-            // Store the uploaded image URL for potential cleanup
-            setUploadedImageUrl(uploadResult.url || null);
-
-            // Then submit the form data with image URL
-            const supabase = createClient();
-            const { error } = await supabase
-                .from('betting_submissions')
-                .insert([
-                    {
-                        name: formData.name,
-                        email: formData.email,
-                        sports: formData.selectedSports,
-                        teams: formData.selectedTeams,
-                        payment_confirmation_url: uploadResult.url
-                    }
-                ]);
-
-            if (error) {
-                throw error;
-            }
-
-            setSubmitMessage('Submission successful! Thank you for participating.');
-            setFormData({
-                name: '',
-                email: '',
-                selectedSports: [],
-                selectedTeams: []
-            });
-            setImagePreview(null);
-            setUploadedImageUrl(null);
-
-            // Reset file input
-            const fileInput = document.getElementById('payment-image') as HTMLInputElement;
-            if (fileInput) fileInput.value = '';
-
-        } catch (error: unknown) {
+        if (error) {
             console.error('Error submitting form:', error);
 
             // Delete the uploaded image if form submission failed
@@ -255,15 +239,31 @@ export default function BettingForm() {
             }
 
             // Handle specific database errors
-            const errorMessage = error instanceof AuthError ? error.message : 'An unknown error occurred';
-            if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint') || errorMessage.includes('already exists')) {
+            if (error.message.includes('duplicate key') || error.message.includes('unique constraint') || error.message.includes('already exists')) {
                 setSubmitMessage('This email has already been used to submit a form. Each person can only submit once.');
             } else {
-                setSubmitMessage(`Error submitting form: ${errorMessage}`);
+                setSubmitMessage(`Error submitting form: ${error.message}`);
             }
-        } finally {
             setIsSubmitting(false);
+            return;
         }
+
+        // Success case
+        setSubmitMessage('Submission successful! Thank you for participating.');
+        setFormData({
+            name: '',
+            email: '',
+            selectedSports: [],
+            selectedTeams: []
+        });
+        setImagePreview(null);
+        setUploadedImageUrl(null);
+
+        // Reset file input
+        const fileInput = document.getElementById('payment-image') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+
+        setIsSubmitting(false);
     };
 
     return (

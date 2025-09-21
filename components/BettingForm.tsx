@@ -357,11 +357,11 @@ export default function BettingForm() {
                                         <div className="text-center">
                                             <div className="text-2xl mb-1">
                                                 {sport.id === 'chess' && '♟️'}
-                                                {sport.id === 'football' && '�'}
+                                                {sport.id === 'football' && '⚽️'}
                                                 {sport.id === 'frisbee' && '🥏'}
-                                                {sport.id === 'pool' && '�'}
+                                                {sport.id === 'pool' && '🎱'}
                                                 {sport.id === 'beachvolleyball' && '🏐'}
-                                                {sport.id === 'table-tennis' && '�'}
+                                                {sport.id === 'table-tennis' && '🏓'}
                                                 {sport.id === 'swimming' && '🏊'}
                                                 {sport.id === 'shooting' && '🎯'}
                                             </div>

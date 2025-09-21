@@ -16,8 +16,8 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: "Ashoka Business Club Betting",
-  description: "Welcome to the Ashoka Business Club Betting",
+  title: "Ashoka Business Club Fantasy",
+  description: "Welcome to the Ashoka Business Club Fantasy",
 };
 
 export default function RootLayout({

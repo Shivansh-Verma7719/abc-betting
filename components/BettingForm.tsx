@@ -8,7 +8,14 @@ import {
     CardBody,
     Divider,
     Spinner,
-    Alert
+    Alert,
+    Modal,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    useDisclosure,
+    Checkbox
 } from '@heroui/react';
 import { SPORTS_DATA } from '../app/data';
 import { createClient } from '../utils/supabase/client';
@@ -16,7 +23,6 @@ import { compressImage } from '../utils/images/compression';
 import { uploadImage } from '../utils/images/upload';
 import { deleteImage } from '../utils/images/storage';
 import Image from 'next/image';
-import { AuthError } from '@supabase/supabase-js';
 
 interface FormData {
     name: string;
@@ -24,14 +30,17 @@ interface FormData {
     selectedSports: string[];
     selectedTeams: string[];
     paymentConfirmationImage?: File;
+    termsAccepted: boolean;
 }
 
 export default function BettingForm() {
+    const { isOpen, onOpen, onOpenChange } = useDisclosure();
     const [formData, setFormData] = useState<FormData>({
         name: '',
         email: '',
         selectedSports: [],
-        selectedTeams: []
+        selectedTeams: [],
+        termsAccepted: false
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
@@ -39,7 +48,6 @@ export default function BettingForm() {
     const [isCompressing, setIsCompressing] = useState(false);
     const [compressionError, setCompressionError] = useState<string | null>(null);
     const [emailError, setEmailError] = useState<string | null>(null);
-    const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
     const validateEmail = (email: string): boolean => {
         const ashokaEmailRegex = /^[^\s@]+@ashoka\.edu\.in$/;
@@ -190,6 +198,11 @@ export default function BettingForm() {
             return;
         }
 
+        if (!formData.termsAccepted) {
+            setSubmitMessage('Please accept the terms and conditions to proceed.');
+            return;
+        }
+
         setIsSubmitting(true);
         setSubmitMessage('');
 
@@ -212,7 +225,6 @@ export default function BettingForm() {
 
         // Store the uploaded image URL for potential cleanup
         const uploadedImageUrl = uploadResult.url;
-        setUploadedImageUrl(uploadedImageUrl || null);
 
         // Then submit the form data with image URL
         const supabase = createClient();
@@ -235,7 +247,6 @@ export default function BettingForm() {
             if (uploadedImageUrl) {
                 console.log('Deleting uploaded image due to submission error...');
                 await deleteImage(uploadedImageUrl, 'payment-confirmations');
-                setUploadedImageUrl(null);
             }
 
             // Handle specific database errors
@@ -254,10 +265,10 @@ export default function BettingForm() {
             name: '',
             email: '',
             selectedSports: [],
-            selectedTeams: []
+            selectedTeams: [],
+            termsAccepted: false
         });
         setImagePreview(null);
-        setUploadedImageUrl(null);
 
         // Reset file input
         const fileInput = document.getElementById('payment-image') as HTMLInputElement;
@@ -345,13 +356,14 @@ export default function BettingForm() {
                                         )}
                                         <div className="text-center">
                                             <div className="text-2xl mb-1">
-                                                {sport.id === 'football' && '🏈'}
-                                                {sport.id === 'basketball' && '🏀'}
-                                                {sport.id === 'cricket' && '🏏'}
-                                                {sport.id === 'tennis' && '🎾'}
-                                                {sport.id === 'baseball' && '⚾'}
-                                                {sport.id === 'hockey' && '🏒'}
-                                                {sport.id === 'soccer' && '⚽'}
+                                                {sport.id === 'chess' && '♟️'}
+                                                {sport.id === 'football' && '�'}
+                                                {sport.id === 'frisbee' && '🥏'}
+                                                {sport.id === 'pool' && '�'}
+                                                {sport.id === 'beachvolleyball' && '🏐'}
+                                                {sport.id === 'table-tennis' && '�'}
+                                                {sport.id === 'swimming' && '🏊'}
+                                                {sport.id === 'shooting' && '🎯'}
                                             </div>
                                             <h4 className={`font-semibold text-xs ${isSelected ? 'text-blue-700' : isDisabled ? 'text-gray-400' : 'text-gray-700'
                                                 }`}>
@@ -391,13 +403,14 @@ export default function BettingForm() {
                                             <div key={sportId} className="border-2 border-indigo-200 rounded-xl p-6 bg-gradient-to-br from-indigo-25 to-indigo-50">
                                                 <h4 className="font-bold text-indigo-800 mb-4 text-lg flex items-center gap-3">
                                                     <span className="text-2xl">
-                                                        {sportId === 'football' && '🏈'}
-                                                        {sportId === 'basketball' && '🏀'}
-                                                        {sportId === 'cricket' && '🏏'}
-                                                        {sportId === 'tennis' && '🎾'}
-                                                        {sportId === 'baseball' && '⚾'}
-                                                        {sportId === 'hockey' && '🏒'}
-                                                        {sportId === 'soccer' && '⚽'}
+                                                        {sportId === 'chess' && '♟️'}
+                                                        {sportId === 'football' && '�'}
+                                                        {sportId === 'frisbee' && '🥏'}
+                                                        {sportId === 'pool' && '�'}
+                                                        {sportId === 'beachvolleyball' && '🏐'}
+                                                        {sportId === 'table-tennis' && '�'}
+                                                        {sportId === 'swimming' && '🏊'}
+                                                        {sportId === 'shooting' && '🎯'}
                                                     </span>
                                                     {sport.name}
                                                 </h4>
@@ -508,6 +521,35 @@ export default function BettingForm() {
                         </div>
                     </div>
 
+                    {/* Terms and Conditions */}
+                    <Divider />
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <span className="text-2xl">📋</span>
+                            Terms and Conditions
+                        </h3>
+                        <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+                            <Checkbox
+                                isSelected={formData.termsAccepted}
+                                onValueChange={(checked) => setFormData(prev => ({ ...prev, termsAccepted: checked }))}
+                                color="primary"
+                            />
+                            <div className="flex-1">
+                                <p className="text-sm text-gray-700">
+                                    I agree to the{' '}
+                                    <button
+                                        type="button"
+                                        onClick={onOpen}
+                                        className="text-blue-600 underline hover:text-blue-800 font-medium"
+                                    >
+                                        terms and conditions
+                                    </button>
+                                    {' '}of this fantasy event.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Submit Button */}
                     <Divider />
                     <div className="space-y-4">
@@ -523,6 +565,7 @@ export default function BettingForm() {
                                 formData.selectedSports.length === 0 ||
                                 formData.selectedTeams.length !== formData.selectedSports.length ||
                                 !formData.paymentConfirmationImage ||
+                                !formData.termsAccepted ||
                                 isSubmitting ||
                                 isCompressing
                             }
@@ -535,7 +578,7 @@ export default function BettingForm() {
                             ) : (
                                 <>
                                     <span className="mr-2">🚀</span>
-                                    Submit Betting Form
+                                    Submit Fantasy Form
                                 </>
                             )}
                         </Button>
@@ -552,6 +595,63 @@ export default function BettingForm() {
                     </div>
                 </form>
             </CardBody>
+
+            {/* Terms and Conditions Modal */}
+            <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl" scrollBehavior="inside">
+                <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader className="flex flex-col gap-1">
+                                <h2 className="text-xl font-bold text-gray-800">Terms and Conditions</h2>
+                                <p className="text-sm text-gray-600">ABC Fantasy Event</p>
+                            </ModalHeader>
+                            <ModalBody>
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <h3 className="font-semibold text-yellow-800 mb-2">Important Notice</h3>
+                                        <p className="text-sm text-yellow-700">
+                                            By participating in this fantasy event, you acknowledge and agree to the following terms:
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <h4 className="font-semibold text-gray-800 mb-2">1. Winner Selection</h4>
+                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                In the event that multiple participants achieve winning status, the organizing team reserves the absolute right and discretion to:
+                                            </p>
+                                            <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-gray-600 ml-4">
+                                                <li>Cancel the event entirely</li>
+                                                <li>Select the first winner based on submission timestamp</li>
+                                                <li>Implement any other fair resolution method as deemed appropriate by the organizing committee at that time</li>
+                                            </ul>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="font-semibold text-gray-800 mb-2">2. Event Administration</h4>
+                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                The organizing team maintains full authority over all aspects of the event, including but not limited to rule interpretation, dispute resolution, and final decisions regarding winners and prizes.
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="font-semibold text-gray-800 mb-2">3. Participation Agreement</h4>
+                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                By submitting this form, you acknowledge that you have read, understood, and agree to be bound by these terms and conditions. You also confirm that your participation is voluntary and that you accept the organizing team&apos;s decisions as final.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ModalBody>
+                            <ModalFooter>
+                                <Button color="primary" onPress={onClose}>
+                                    I Understand
+                                </Button>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
         </Card>
     );
 }

@@ -32,7 +32,7 @@ export default function HomePage() {
             Ashoka Business Club x SEC
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            <span className="font-semibold text-indigo-700">Pay ₹50 and win up to ₹500!</span> Get 7 out of 10 teams right to earn up to 10X your money in our thrilling fantasy tournament.
+            <span className="font-semibold text-indigo-700">Pay ₹50 and win up to ₹500!</span> Get 8 out of 8 teams right to earn up to 10X your money in our thrilling fantasy tournament.
           </p>
         </div>
 

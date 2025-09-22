@@ -345,11 +345,11 @@ export default function BettingForm() {
                                 Sport Selection
                             </h3>
                             <span className="text-sm font-medium px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
-                                {formData.selectedSports.length}/7 selected
+                                {formData.selectedSports.length}/8 selected
                             </span>
                         </div>
                         <p className="text-gray-600">
-                            Select the sports you want to bet on (up to 7)
+                            Select the sports you want to bet on (up to 8)
                         </p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                             {SPORTS_DATA.map((sport) => {
@@ -382,11 +382,11 @@ export default function BettingForm() {
                                         <div className="text-center">
                                             <div className="text-2xl mb-1">
                                                 {sport.id === 'chess' && '♟️'}
-                                                {sport.id === 'football' && '�'}
+                                                {sport.id === 'football' && '⚽️'}
                                                 {sport.id === 'frisbee' && '🥏'}
-                                                {sport.id === 'pool' && '�'}
+                                                {sport.id === 'pool' && '🎱'}
                                                 {sport.id === 'beachvolleyball' && '🏐'}
-                                                {sport.id === 'table-tennis' && '�'}
+                                                {sport.id === 'table-tennis' && '🏓'}
                                                 {sport.id === 'swimming' && '🏊'}
                                                 {sport.id === 'shooting' && '🎯'}
                                             </div>

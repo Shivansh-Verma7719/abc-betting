@@ -17,7 +17,7 @@ import {
     useDisclosure,
     Checkbox
 } from '@heroui/react';
-import { SPORTS_DATA } from '../app/data';
+import { SPORTS_DATA, Sport, Team } from '../app/data';
 import { createClient } from '../utils/supabase/client';
 import { compressImage } from '../utils/images/compression';
 import { uploadImage } from '../utils/images/upload';
@@ -35,6 +35,8 @@ interface FormData {
 
 export default function BettingForm() {
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
+    const { isOpen: isTeamModalOpen, onOpen: onTeamModalOpen, onOpenChange: onTeamModalOpenChange } = useDisclosure();
+    const [selectedTeamForModal, setSelectedTeamForModal] = useState<{ sport: Sport, team: Team } | null>(null);
     const [formData, setFormData] = useState<FormData>({
         name: '',
         email: '',
@@ -73,8 +75,9 @@ export default function BettingForm() {
             // Remove teams that belong to deselected sports
             if (isSelected) {
                 const sportData = SPORTS_DATA.find(sport => sport.id === sportId);
+                const sportTeamNames = sportData?.teams.map(t => t.name) || [];
                 const newSelectedTeams = prev.selectedTeams.filter(team =>
-                    !sportData?.teams.includes(team)
+                    !sportTeamNames.includes(team)
                 );
                 return {
                     ...prev,
@@ -153,7 +156,10 @@ export default function BettingForm() {
 
     const handleTeamToggle = (team: string, sportId: string) => {
         setFormData(prev => {
-            const currentSportTeams = SPORTS_DATA.find(s => s.id === sportId)?.teams || [];
+            const sport = SPORTS_DATA.find(s => s.id === sportId);
+            if (!sport) return prev;
+
+            const currentSportTeams = sport.teams.map(t => t.name);
             const isCurrentTeamSelected = prev.selectedTeams.includes(team);
 
             if (isCurrentTeamSelected) {
@@ -171,6 +177,25 @@ export default function BettingForm() {
                 };
             }
         });
+    };
+
+    const handleTeamSelection = (team: Team, sport: Sport) => {
+        if (sport.type === 'team') {
+            // For team sports, show modal with team members
+            setSelectedTeamForModal({ sport, team });
+            onTeamModalOpen();
+        } else {
+            // For individual sports, select directly
+            handleTeamToggle(team.name, sport.id);
+        }
+    };
+
+    const confirmTeamSelection = () => {
+        if (selectedTeamForModal) {
+            handleTeamToggle(selectedTeamForModal.team.name, selectedTeamForModal.sport.id);
+            setSelectedTeamForModal(null);
+            onTeamModalOpenChange();
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -416,12 +441,12 @@ export default function BettingForm() {
                                                 </h4>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                                     {sport.teams.map((team) => {
-                                                        const isSelected = formData.selectedTeams.includes(team);
+                                                        const isSelected = formData.selectedTeams.includes(team.name);
 
                                                         return (
                                                             <div
-                                                                key={team}
-                                                                onClick={() => handleTeamToggle(team, sportId)}
+                                                                key={team.name}
+                                                                onClick={() => handleTeamSelection(team, sport)}
                                                                 className={`
                                                                     relative cursor-pointer transition-all duration-200 ease-in-out transform hover:scale-102
                                                                     rounded-lg p-4 border text-sm font-medium text-center min-h-[60px] flex items-center justify-center
@@ -439,7 +464,14 @@ export default function BettingForm() {
                                                                         </svg>
                                                                     </div>
                                                                 )}
-                                                                <span className="pr-2">{team}</span>
+                                                                <div className="flex flex-col items-center gap-1">
+                                                                    <span className="pr-2">{team.name}</span>
+                                                                    {sport.type === 'team' && team.members.length > 0 && (
+                                                                        <span className="text-xs text-gray-500">
+                                                                            {team.members.length} Players
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         );
                                                     })}
@@ -646,6 +678,53 @@ export default function BettingForm() {
                             <ModalFooter>
                                 <Button color="primary" onPress={onClose}>
                                     I Understand
+                                </Button>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
+
+            {/* Team Members Modal */}
+            <Modal isOpen={isTeamModalOpen} onOpenChange={onTeamModalOpenChange} size="lg">
+                <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader className="flex flex-col gap-1">
+                                <h2 className="text-xl font-bold text-gray-800">Players</h2>
+                                {selectedTeamForModal && (
+                                    <p className="text-sm text-gray-600">
+                                        {selectedTeamForModal.team.name} - {selectedTeamForModal.sport.name}
+                                    </p>
+                                )}
+                            </ModalHeader>
+                            <ModalBody>
+                                {selectedTeamForModal && (
+                                    <div className="space-y-4">
+                                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <h3 className="font-semibold text-blue-800 mb-2">Team: {selectedTeamForModal.team.name}</h3>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="font-semibold text-gray-800 mb-3">Team Players ({selectedTeamForModal.team.members.length})</h4>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {selectedTeamForModal.team.members.map((member, index) => (
+                                                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                                                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                                        <span className="text-sm text-gray-700">{member}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </ModalBody>
+                            <ModalFooter>
+                                <Button color="danger" variant="light" onPress={onClose}>
+                                    Cancel
+                                </Button>
+                                <Button color="primary" onPress={confirmTeamSelection}>
+                                    Select This Team
                                 </Button>
                             </ModalFooter>
                         </>

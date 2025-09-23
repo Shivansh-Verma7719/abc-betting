@@ -511,8 +511,8 @@ export default function BettingForm() {
                                         // variant='flat'
                                         className="font-semibold px-8 py-3"
                                         onPress={() => {
-                                            const payeeVPA = "vaaruniswaroop@okhdfcbank";
-                                            const payeeName = "Vaaruni Swaroop";
+                                            const payeeVPA = "avaniug@okhdfcbank";
+                                            const payeeName = "Avani Jindal";
                                             const amount = "50.00";
                                             const note = "ABC x SEC Fantasy Event";
                                             const upiLink = `upi://pay?pa=${payeeVPA}&pn=${payeeName}&tn=${note}&am=${amount}&cu=INR`;

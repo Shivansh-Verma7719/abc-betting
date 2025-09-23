@@ -428,14 +428,14 @@ export default function BettingForm() {
                                             <div key={sportId} className="border-2 border-indigo-200 rounded-xl p-6 bg-gradient-to-br from-indigo-25 to-indigo-50">
                                                 <h4 className="font-bold text-indigo-800 mb-4 text-lg flex items-center gap-3">
                                                     <span className="text-2xl">
-                                                        {sportId === 'chess' && '♟️'}
-                                                        {sportId === 'football' && '�'}
-                                                        {sportId === 'frisbee' && '🥏'}
-                                                        {sportId === 'pool' && '�'}
-                                                        {sportId === 'beachvolleyball' && '🏐'}
-                                                        {sportId === 'table-tennis' && '�'}
-                                                        {sportId === 'swimming' && '🏊'}
-                                                        {sportId === 'shooting' && '🎯'}
+                                                        {sport.id === 'chess' && '♟️'}
+                                                        {sport.id === 'football' && '⚽️'}
+                                                        {sport.id === 'frisbee' && '🥏'}
+                                                        {sport.id === 'pool' && '🎱'}
+                                                        {sport.id === 'beachvolleyball' && '🏐'}
+                                                        {sport.id === 'table-tennis' && '🏓'}
+                                                        {sport.id === 'swimming' && '🏊'}
+                                                        {sport.id === 'shooting' && '🎯'}
                                                     </span>
                                                     {sport.name}
                                                 </h4>

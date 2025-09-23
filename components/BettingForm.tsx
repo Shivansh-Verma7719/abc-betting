@@ -110,14 +110,14 @@ export default function BettingForm() {
         try {
             // Compress the image
             const compressionResult = await compressImage(file, {
-                maxSizeMB: 2,
+                maxSizeMB: 3,
                 maxWidthOrHeight: 1200,
-                quality: 0.8,
+                quality: 0.85,
                 fileType: 'image/webp'
             });
 
             // Check if compressed file is still too large
-            if (compressionResult.file.size > 2.5 * 1024 * 1024) {
+            if (compressionResult.file.size > 5 * 1024 * 1024) {
                 setCompressionError('Image is too large. Please upload a smaller image in size');
                 setIsCompressing(false);
                 return;

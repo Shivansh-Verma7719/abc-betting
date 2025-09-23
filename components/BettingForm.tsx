@@ -495,6 +495,26 @@ export default function BettingForm() {
                             Upload a screenshot of your payment confirmation
                         </p>
 
+                        {/* QR Code Section */}
+                        <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                            <h4 className="text-lg font-semibold text-gray-800 mb-3 text-center">
+                                Scan QR Code to Pay
+                            </h4>
+                            <div className="flex justify-center">
+                                <div className="relative w-72 h-72 rounded-lg overflow-hidden bg-white">
+                                    <Image
+                                        src="/images/payment_qr.jpg"
+                                        alt="Payment QR Code"
+                                        fill
+                                        className="object-contain"
+                                    />
+                                </div>
+                            </div>
+                            <p className="text-sm text-gray-600 text-center mt-3">
+                                Scan this QR code with your payment app to complete the transaction
+                            </p>
+                        </div>
+
                         <div className="space-y-4">
                             <input
                                 id="payment-image"

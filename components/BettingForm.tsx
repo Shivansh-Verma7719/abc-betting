@@ -354,7 +354,7 @@ export default function BettingForm() {
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                             {SPORTS_DATA.map((sport) => {
                                 const isSelected = formData.selectedSports.includes(sport.id);
-                                const isDisabled = !isSelected && formData.selectedSports.length >= 7;
+                                const isDisabled = !isSelected && formData.selectedSports.length >= 8;
 
                                 return (
                                     <div
@@ -519,7 +519,7 @@ export default function BettingForm() {
                                             window.open(upiLink, '_self');
                                         }}
                                         startContent={
-                                            <Image 
+                                            <Image
                                                 src="/images/upi.png"
                                                 alt="UPI Logo"
                                                 width={24}

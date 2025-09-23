@@ -497,22 +497,67 @@ export default function BettingForm() {
 
                         {/* QR Code Section */}
                         <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
-                            <h4 className="text-lg font-semibold text-gray-800 mb-3 text-center">
-                                Scan QR Code to Pay
+                            <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+                                Pay using UPI
                             </h4>
-                            <div className="flex justify-center">
-                                <div className="relative w-72 h-72 rounded-lg overflow-hidden bg-white">
-                                    <Image
-                                        src="/images/payment_qr.jpg"
-                                        alt="Payment QR Code"
-                                        fill
-                                        className="object-contain"
-                                    />
+
+                            {/* UPI Payment Options */}
+                            <div className="space-y-4">
+                                {/* Pay with UPI Button */}
+                                <div className="flex justify-center">
+                                    <Button
+                                        color="secondary"
+                                        size="lg"
+                                        // variant='flat'
+                                        className="font-semibold px-8 py-3"
+                                        onPress={() => {
+                                            const payeeVPA = "vaaruniswaroop@okhdfcbank";
+                                            const payeeName = "Vaaruni Swaroop";
+                                            const amount = "50.00";
+                                            const note = "ABC x SEC Fantasy Event";
+                                            const upiLink = `upi://pay?pa=${payeeVPA}&pn=${payeeName}&tn=${note}&am=${amount}&cu=INR`;
+                                            window.open(upiLink, '_self');
+                                        }}
+                                        startContent={
+                                            <Image 
+                                                src="/images/upi.png"
+                                                alt="UPI Logo"
+                                                width={24}
+                                                height={24}
+                                            />
+                                        }
+                                    >
+                                        Pay with UPI (₹50)
+                                    </Button>
+                                </div>
+
+                                {/* OR Divider */}
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1 h-px bg-gray-300"></div>
+                                    <span className="text-sm text-gray-500 font-medium">OR</span>
+                                    <div className="flex-1 h-px bg-gray-300"></div>
+                                </div>
+
+                                {/* QR Code */}
+                                <div className="text-center">
+                                    <p className="text-sm font-medium text-gray-700 mb-3">
+                                        Scan QR Code to Pay
+                                    </p>
+                                    <div className="flex justify-center">
+                                        <div className="relative w-48 h-48 border-2 border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
+                                            <Image
+                                                src="/images/payment_qr.jpg"
+                                                alt="Payment QR Code"
+                                                fill
+                                                className="object-contain"
+                                            />
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Scan with any UPI app (GPay, PhonePe, Paytm, etc.)
+                                    </p>
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-600 text-center mt-3">
-                                Scan this QR code with your payment app to complete the transaction
-                            </p>
                         </div>
 
                         <div className="space-y-4">
